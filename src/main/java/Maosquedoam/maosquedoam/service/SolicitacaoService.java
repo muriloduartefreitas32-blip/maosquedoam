@@ -8,6 +8,7 @@ import Maosquedoam.maosquedoam.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -45,5 +46,24 @@ public class SolicitacaoService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario não encontrado"));
         return solicitacaoRepository.findByBeneficiarioId(usuario.getId());
+
+     }
+     public Solicitacao atualizarStatus(Long id,StatusSolicitacao novoStatus, String email){
+        Solicitacao solicitacao = solicitacaoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
+        if(!solicitacao.getItem().getDoador().getEmail().equals(email)){
+            throw new RuntimeException("Sem permissão para atualizar essa solicitação");
+        }
+        solicitacao.setStatus((novoStatus));
+        solicitacao.setDataAtualizacao((LocalDateTime.now()) );
+
+        if(novoStatus == StatusSolicitacao.CONCLUIDA){
+            solicitacao.getItem().setStatus((StatusItem.DOADO) );
+            itemRepostitory.save(solicitacao.getItem());
+        }
+        if( novoStatus == StatusSolicitacao.RECUSADA || novoStatus == StatusSolicitacao.CANCELADA){
+            solicitacao.getItem().setStatus(StatusItem.DISPONIVEL);
+        }
+        return solicitacaoRepository.save(solicitacao);
      }
 }
