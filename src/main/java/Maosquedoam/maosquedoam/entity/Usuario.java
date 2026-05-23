@@ -9,7 +9,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.time.LocalDateTime;
 @Entity
-
+@Getter
+@Setter
 public class Usuario {
 
 
@@ -17,15 +18,13 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Setter
-    @Getter
+
     @NotBlank
     private String nome;
 
 
 
-    @Setter
-    @Getter
+
     @Email
     @NotBlank
     @Column(unique = true)
@@ -33,13 +32,10 @@ public class Usuario {
 
 
 
-    @Getter
-    @Setter
+
     @NotBlank
     private String senha;
 
-   @Setter
-   @Getter
    @Enumerated(EnumType.STRING)
     private TipoUsuario tipoUSuario;
 

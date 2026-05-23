@@ -11,5 +11,5 @@ public interface UsuarioRepository  extends JpaRepository<Usuario, Long> {
 
     String email(String email);
 
-    String email(String email);
+
 }

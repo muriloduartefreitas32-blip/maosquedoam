@@ -1,6 +1,7 @@
 package Maosquedoam.maosquedoam.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +19,7 @@ public class ItemDto {
 
     @NotBlank
     private String estado;
+
 
     private Integer quantidade;
 
