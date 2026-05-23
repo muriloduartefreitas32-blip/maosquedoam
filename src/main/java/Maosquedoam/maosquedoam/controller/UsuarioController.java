@@ -1,5 +1,6 @@
 package Maosquedoam.maosquedoam.controller;
 
+import Maosquedoam.maosquedoam.dto.LoginDto;
 import Maosquedoam.maosquedoam.dto.UsuarioDto;
 import Maosquedoam.maosquedoam.entity.Usuario;
 import Maosquedoam.maosquedoam.service.UsuarioService;
@@ -22,6 +23,12 @@ public class UsuarioController {
             ){
         Usuario usuario = service.cadastrar(dto);
         return ResponseEntity.ok(usuario);
+    }
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginDto dto){
+        String resposta = service.login(dto);
+
+        return ResponseEntity.ok(resposta);
     }
 
 

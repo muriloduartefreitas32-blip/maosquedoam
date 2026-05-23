@@ -11,14 +11,18 @@ import java.time.LocalDateTime;
 @Entity
 
 public class Usuario {
-    @Getter
-    public Object setsenha;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
+    @Getter
     @NotBlank
     private String nome;
+
+
 
     @Setter
     @Getter
@@ -28,6 +32,9 @@ public class Usuario {
     private String email;
 
 
+
+    @Getter
+    @Setter
     @NotBlank
     private String senha;
 
@@ -53,13 +60,4 @@ public class Usuario {
     }
 
 
-    public void setnome(String nome) {
-    }
-
-    public void setemail(String email) {
-    }
-
-
-    public void setsenha(@Nullable String encode) {
-    }
 }

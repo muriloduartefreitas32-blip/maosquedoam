@@ -1,6 +1,7 @@
 package Maosquedoam.maosquedoam.service;
 
 
+import Maosquedoam.maosquedoam.dto.LoginDto;
 import Maosquedoam.maosquedoam.dto.UsuarioDto;
 import Maosquedoam.maosquedoam.entity.Usuario;
 import Maosquedoam.maosquedoam.repository.UsuarioRepository;
@@ -23,10 +24,10 @@ public class UsuarioService {
 
         Usuario usuario = new Usuario();
 
-        usuario.setnome(dto.getNome());
-        usuario.setemail(dto.getEmail());
+        usuario.setNome(dto.getNome());
+        usuario.setEmail(dto.getEmail());
 
-        usuario.setsenha(encoder.encode(dto.getSenha()));
+        usuario.setSenha(encoder.encode(dto.getSenha()));
 
         usuario.setTipoUSuario(dto.getTipoUsuario());
 
@@ -36,6 +37,18 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
+    public String login(LoginDto dto){
 
+        Usuario usuario = usuarioRepository
+                .findByEmail(dto.getEmail())
+                .orElseThrow(() -> new RuntimeException(("Usuario não encontrado")));
+
+                boolean senhaCorreta = encoder.matches(dto.getSenha(), usuario.getSenha());
+
+                if(!senhaCorreta){
+                    throw new RuntimeException("Senha incorreta");
+                }
+                return "Login realizado com sucesso";
+    }
 
 }
