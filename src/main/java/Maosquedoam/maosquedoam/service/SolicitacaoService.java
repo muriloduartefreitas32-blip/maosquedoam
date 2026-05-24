@@ -50,6 +50,11 @@ public class SolicitacaoService {
         return solicitacaoRepository.findByBeneficiarioId(usuario.getId());
 
      }
+    public List<Solicitacao> listarSolicitacoesRecebidas(String email) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario não encontrado"));
+        return solicitacaoRepository.findByItemDoadorId(usuario.getId());
+    }
      public Solicitacao atualizarStatus(Long id,StatusSolicitacao novoStatus, String email){
         Solicitacao solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
