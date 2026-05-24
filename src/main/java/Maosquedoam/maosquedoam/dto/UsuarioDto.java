@@ -1,6 +1,6 @@
 package Maosquedoam.maosquedoam.dto;
 
-import Maosquedoam.maosquedoam.entity.TipoUsuario;
+import Maosquedoam.maosquedoam.enuns.TipoUsuario;
 import lombok.Getter;
 import lombok.Setter;
 

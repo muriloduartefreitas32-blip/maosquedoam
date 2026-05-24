@@ -1,7 +1,7 @@
 package Maosquedoam.maosquedoam.repository;
 
 import Maosquedoam.maosquedoam.entity.Item;
-import Maosquedoam.maosquedoam.entity.StatusItem;
+import Maosquedoam.maosquedoam.enuns.StatusItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

@@ -1,4 +1,4 @@
-package Maosquedoam.maosquedoam.entity;
+package Maosquedoam.maosquedoam.enuns;
 
 public enum StatusItem {
     DISPONIVEL,

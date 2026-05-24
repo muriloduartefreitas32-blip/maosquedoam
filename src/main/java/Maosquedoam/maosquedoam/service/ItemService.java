@@ -2,7 +2,7 @@ package Maosquedoam.maosquedoam.service;
 
 import Maosquedoam.maosquedoam.dto.ItemDto;
 import Maosquedoam.maosquedoam.entity.Item;
-import Maosquedoam.maosquedoam.entity.StatusItem;
+import Maosquedoam.maosquedoam.enuns.StatusItem;
 import Maosquedoam.maosquedoam.entity.Usuario;
 import Maosquedoam.maosquedoam.repository.ItemRepostitory;
 import Maosquedoam.maosquedoam.repository.UsuarioRepository;

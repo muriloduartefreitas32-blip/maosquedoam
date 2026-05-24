@@ -2,6 +2,8 @@ package Maosquedoam.maosquedoam.service;
 
 import Maosquedoam.maosquedoam.dto.SolicitacaoDto;
 import Maosquedoam.maosquedoam.entity.*;
+import Maosquedoam.maosquedoam.enuns.StatusItem;
+import Maosquedoam.maosquedoam.enuns.StatusSolicitacao;
 import Maosquedoam.maosquedoam.repository.ItemRepostitory;
 import Maosquedoam.maosquedoam.repository.SolicitacaoRepository;
 import Maosquedoam.maosquedoam.repository.UsuarioRepository;
