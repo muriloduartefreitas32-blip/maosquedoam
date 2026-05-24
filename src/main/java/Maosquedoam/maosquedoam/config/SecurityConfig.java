@@ -24,9 +24,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 public class SecurityConfig {
 
     @Autowired
-    private CustomUserDetailsService customUserDetailsService;
-
-    @Autowired
     private JwtFilter jwtFilter;
 
     @Bean
@@ -37,21 +34,16 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/usuarios/cadastrar", "/usuarios/login").permitAll()
+                        .requestMatchers("/usuarios/cadastrar", "/usuarios/login",
+                                "/usuarios/recuperar-senha", "/usuarios/redefinir-senha",
+                                "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/itens", "/itens/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService); // só UserDetailsService
-        provider.setPasswordEncoder(passwordEncoder()); // PasswordEncoder via setter
-        return provider;
     }
 
     @Bean
@@ -64,5 +56,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }

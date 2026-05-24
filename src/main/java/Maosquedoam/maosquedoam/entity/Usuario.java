@@ -24,7 +24,6 @@ public class Usuario {
 
 
 
-
     @Email
     @NotBlank
     @Column(unique = true)
@@ -49,6 +48,12 @@ public class Usuario {
 
 
     private LocalDateTime dataCriacao;
+
+    private String codigoRecuperacao;
+
+    private LocalDateTime expiracaoCodigoRecuperacao;
+
+    private boolean ativo = true;
 
     @PrePersist
     public void prePersist(){
