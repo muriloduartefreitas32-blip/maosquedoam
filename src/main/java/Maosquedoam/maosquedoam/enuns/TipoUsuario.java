@@ -1,7 +1,7 @@
 package Maosquedoam.maosquedoam.enuns;
 
 public enum TipoUsuario {
-    DOARDOR,
+    DOADOR,
     BENEFICIARIO,
     ADMIN
 }
