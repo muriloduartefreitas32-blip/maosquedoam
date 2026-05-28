@@ -25,6 +25,7 @@ function abrirModal(html) {
 
 function fecharModal() {
   document.getElementById('modal-overlay').style.display = 'none';
+  chatAtualSolicitacaoId = null;
 }
 
 document.getElementById('modal-overlay').addEventListener('click', (e) => {
@@ -36,10 +37,8 @@ function atualizarNavbar() {
   const usuario = getUsuario();
   const logado = !!getToken() && !!usuario;
 
-  // elementos de deslogado
   document.getElementById('btn-login').style.display = logado ? 'none' : '';
 
-  // elementos de logado
   const perfilEl = document.getElementById('nav-perfil');
   if (logado) {
     const iniciais = (usuario.nome || 'U').split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
@@ -47,6 +46,8 @@ function atualizarNavbar() {
     perfilEl.style.display = 'flex';
     perfilEl.querySelector('.nav-avatar').textContent = iniciais;
     perfilEl.querySelector('.nav-nome').textContent = primeiroNome;
+    conectarWS();
+    atualizarBadge();
   } else {
     perfilEl.style.display = 'none';
   }
@@ -90,7 +91,6 @@ async function fazerLogin() {
       return;
     }
 
-    // Suporte a resposta como texto (token puro) ou JSON {token, usuario}
     const contentType = res.headers.get('content-type') || '';
     let token, usuario;
 
@@ -105,7 +105,6 @@ async function fazerLogin() {
 
     setToken(token);
 
-    // Buscar dados do usuário logado se a API não retornou
     if (!usuario) {
       try {
         const meRes = await fetch(`${API}/usuarios/me`, { headers: { Authorization: `Bearer ${token}` } });
@@ -113,7 +112,6 @@ async function fazerLogin() {
       } catch (_) {}
     }
 
-    // Fallback mínimo com o email para exibir na navbar
     if (!usuario) usuario = { nome: email.split('@')[0], email };
     setUsuario(usuario);
 
@@ -195,6 +193,10 @@ async function fazerCadastro() {
 
 /* ─── LOGOUT ─── */
 function logout() {
+  if (stompClient && stompClient.connected) {
+    stompClient.disconnect();
+    stompClient = null;
+  }
   removeToken();
   removeUsuario();
   atualizarNavbar();
@@ -202,10 +204,8 @@ function logout() {
 }
 
 /* ═══════════════════════════════════════════════
-   ESQUECEU A SENHA — fluxo em 3 telas no modal
+   ESQUECEU A SENHA
    ═══════════════════════════════════════════════ */
-
-// Tela 1 — digitar e-mail
 function abrirEsqueceuSenha() {
   abrirModal(`
     <h2 class="modal-title">Recuperar senha</h2>
@@ -232,15 +232,13 @@ async function enviarLinkRecuperacao() {
   btn.disabled = true;
 
   try {
-    // Chamada à API — não revelamos se o e-mail existe ou não
     await fetch(`${API}/usuarios/recuperar-senha`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
-  } catch (_) { /* silencioso — não revelar existência do e-mail */ }
+  } catch (_) {}
 
-  // Sempre exibe a tela de confirmação
   abrirModal(`
     <div class="modal-success">
       <div class="modal-success-icon">✉</div>
@@ -258,13 +256,11 @@ async function enviarLinkRecuperacao() {
     </div>`);
 }
 
-// Tela de redefinição — aberta via link do e-mail com ?token=...
 function verificarTokenReset() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
   if (!token) return;
 
-  // Limpa o token da URL sem recarregar
   window.history.replaceState({}, document.title, window.location.pathname);
 
   abrirModal(`
@@ -380,9 +376,17 @@ async function confirmarSolicitacao(itemId) {
     method: 'POST', headers: headers(), body: JSON.stringify({ itemId, mensagem })
   });
   if (!res.ok) { toast('Erro ao solicitar item', 'erro'); return; }
+  const solicitacao = await res.json();
   fecharModal();
   toast('Solicitação enviada!');
   carregarItens();
+
+  // Abre o chat automaticamente após solicitar
+  setTimeout(() => {
+    const doador = solicitacao.item?.doador;
+    const iniciais = (doador?.nome || '?').split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+    abrirChat(solicitacao.id, doador?.nome || 'Doador', iniciais);
+  }, 600);
 }
 
 /* ─── FORM DOAÇÃO ─── */
@@ -449,7 +453,235 @@ const obs = new IntersectionObserver((entries) => {
 }, { threshold: 0.5 });
 counters.forEach(c => obs.observe(c));
 
+/* ═══════════════════════════════════════════
+   CHAT / MENSAGENS
+   ═══════════════════════════════════════════ */
+
+let stompClient = null;
+let chatAtualSolicitacaoId = null;
+let inscricaoAtual = null;
+
+/* ─── WebSocket ─── */
+function conectarWS() {
+  if (stompClient && stompClient.connected) return;
+  if (!getToken()) return;
+
+  const socket = new SockJS(`${API}/ws`);
+  stompClient = Stomp.over(socket);
+  stompClient.debug = null;
+
+  stompClient.connect(
+    { Authorization: `Bearer ${getToken()}` },
+    () => console.log('[WS] Conectado'),
+    (err) => console.warn('[WS] Erro:', err)
+  );
+}
+
+function inscreverSolicitacao(solicitacaoId) {
+  if (!stompClient || !stompClient.connected) return;
+  if (inscricaoAtual) {
+    try { inscricaoAtual.unsubscribe(); } catch (_) {}
+  }
+  inscricaoAtual = stompClient.subscribe(`/topic/solicitacao/${solicitacaoId}`, (frame) => {
+    const msg = JSON.parse(frame.body);
+    if (chatAtualSolicitacaoId === solicitacaoId) {
+      renderNovaMensagem(msg);
+    }
+    atualizarBadge();
+  });
+}
+
+/* ─── Badge ─── */
+async function atualizarBadge() {
+  if (!getToken()) return;
+  try {
+    const res = await fetch(`${API}/mensagens/nao-lidas`, { headers: headers() });
+    if (!res.ok) return;
+    const msgs = await res.json();
+    const badge = document.getElementById('msg-badge');
+    if (!badge) return;
+    if (msgs.length > 0) {
+      badge.textContent = msgs.length;
+      badge.style.display = 'inline';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (_) {}
+}
+
+/* ─── Lista de conversas ─── */
+async function abrirConversas() {
+  if (!getToken()) { abrirLogin(); return; }
+
+  abrirModal(`
+    <h2 class="modal-title">💬 Mensagens</h2>
+    <div class="chat-vazio">Carregando conversas...</div>`);
+
+  try {
+    const [minhas, recebidas] = await Promise.all([
+      fetch(`${API}/solicitacoes/minhas`, { headers: headers() }).then(r => r.json()),
+      fetch(`${API}/solicitacoes/recebidas`, { headers: headers() }).then(r => r.json())
+    ]);
+
+    const todas = [
+      ...(Array.isArray(minhas) ? minhas : []),
+      ...(Array.isArray(recebidas) ? recebidas : [])
+    ];
+
+    if (todas.length === 0) {
+      abrirModal(`
+        <h2 class="modal-title">💬 Mensagens</h2>
+        <div class="chat-vazio">Nenhuma conversa ainda.<br>Solicite um item para começar!</div>`);
+      return;
+    }
+
+    const usuario = getUsuario();
+    const itens = todas.map(sol => {
+      const euSouBeneficiario = sol.beneficiario?.email === usuario?.email;
+      const outro = euSouBeneficiario ? sol.item?.doador : sol.beneficiario;
+      const iniciais = (outro?.nome || '?').split(' ').map(p => p[0]).join('').toUpperCase().slice(0, 2);
+      const statusLabel = { PENDENTE: '⏳ Pendente', ACEITA: '✅ Aceita', RECUSADA: '❌ Recusada', CONCLUIDA: '🎁 Concluída', CANCELADA: '🚫 Cancelada' };
+      return `
+        <div class="conv-item" onclick="abrirChat(${sol.id}, '${(outro?.nome || 'Usuário').replace(/'/g, "\\'")}', '${iniciais}')">
+          <div class="conv-avatar">${iniciais}</div>
+          <div class="conv-info">
+            <div class="conv-nome">${outro?.nome || 'Usuário'}</div>
+            <div class="conv-item-titulo">📦 ${sol.item?.titulo || 'Item'}</div>
+            <div class="conv-preview">${statusLabel[sol.status] || sol.status}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    abrirModal(`
+      <h2 class="modal-title">💬 Mensagens</h2>
+      <div class="conv-list">${itens}</div>`);
+
+  } catch (_) {
+    abrirModal(`
+      <h2 class="modal-title">💬 Mensagens</h2>
+      <div class="chat-vazio">Erro ao carregar conversas.</div>`);
+  }
+}
+
+/* ─── Chat de uma solicitação ─── */
+async function abrirChat(solicitacaoId, nomeOutro, iniciaisOutro) {
+  chatAtualSolicitacaoId = solicitacaoId;
+
+  abrirModal(`
+    <div class="chat-header">
+      <button class="chat-back" onclick="abrirConversas()">←</button>
+      <div class="conv-avatar" style="width:34px;height:34px;font-size:0.8rem">${iniciaisOutro}</div>
+      <div>
+        <div style="font-weight:600;color:#f0ede6;font-size:0.95rem">${nomeOutro}</div>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-msgs">
+      <div class="chat-vazio">Carregando mensagens...</div>
+    </div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chat-input" placeholder="Digite uma mensagem..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMensagemChat();}"></textarea>
+      <button class="chat-send" onclick="enviarMensagemChat()">➤</button>
+    </div>`);
+
+  // Conectar WS e inscrever no tópico desta solicitação
+  if (!stompClient || !stompClient.connected) {
+    conectarWS();
+    setTimeout(() => inscreverSolicitacao(solicitacaoId), 800);
+  } else {
+    inscreverSolicitacao(solicitacaoId);
+  }
+
+  // Carregar histórico
+  try {
+    const res = await fetch(`${API}/mensagens/solicitacao/${solicitacaoId}`, { headers: headers() });
+    const msgs = await res.json();
+    const container = document.getElementById('chat-msgs');
+    if (!container) return;
+
+    if (!Array.isArray(msgs) || msgs.length === 0) {
+      container.innerHTML = '<div class="chat-vazio">Nenhuma mensagem ainda.<br>Diga olá! 👋</div>';
+      return;
+    }
+
+    const usuario = getUsuario();
+    container.innerHTML = msgs.map(m => renderMensagem(m, usuario)).join('');
+    container.scrollTop = container.scrollHeight;
+
+    // Marcar como lidas
+    msgs
+      .filter(m => m.destinatario?.email === usuario?.email && !m.lida)
+      .forEach(m => fetch(`${API}/mensagens/${m.id}/lida`, { method: 'PATCH', headers: headers() }).catch(() => {}));
+
+    atualizarBadge();
+  } catch (_) {
+    const container = document.getElementById('chat-msgs');
+    if (container) container.innerHTML = '<div class="chat-vazio">Erro ao carregar mensagens.</div>';
+  }
+}
+
+/* ─── Renderizar mensagem ─── */
+function renderMensagem(msg, usuario) {
+  const euEnviei = msg.remetente?.email === usuario?.email;
+  const hora = msg.dataEnvio
+    ? new Date(msg.dataEnvio).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    : '';
+  return `
+    <div class="msg-bubble ${euEnviei ? 'enviada' : 'recebida'}">
+      ${msg.conteudo}
+      <div class="msg-hora">${hora}</div>
+    </div>`;
+}
+
+function renderNovaMensagem(msg) {
+  const container = document.getElementById('chat-msgs');
+  if (!container) return;
+  const vazio = container.querySelector('.chat-vazio');
+  if (vazio) vazio.remove();
+  const usuario = getUsuario();
+  container.insertAdjacentHTML('beforeend', renderMensagem(msg, usuario));
+  container.scrollTop = container.scrollHeight;
+}
+
+/* ─── Enviar mensagem ─── */
+async function enviarMensagemChat() {
+  const input = document.getElementById('chat-input');
+  if (!input) return;
+  const conteudo = input.value.trim();
+  if (!conteudo || !chatAtualSolicitacaoId) return;
+
+  input.value = '';
+  input.focus();
+
+  // Tenta WebSocket, fallback para REST
+  if (stompClient && stompClient.connected) {
+    stompClient.send(
+      '/app/chat',
+      { Authorization: `Bearer ${getToken()}` },
+      JSON.stringify({ solicitacaoId: chatAtualSolicitacaoId, conteudo })
+    );
+  } else {
+    try {
+      const res = await fetch(`${API}/mensagens/enviar`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ solicitacaoId: chatAtualSolicitacaoId, conteudo })
+      });
+      if (res.ok) {
+        const msg = await res.json();
+        renderNovaMensagem(msg);
+      } else {
+        toast('Erro ao enviar mensagem', 'erro');
+      }
+    } catch (_) {
+      toast('Erro ao enviar mensagem', 'erro');
+    }
+  }
+}
+
 /* ─── INIT ─── */
 atualizarNavbar();
 carregarItens();
-verificarTokenReset(); // detecta ?token= na URL para redefinição de senha
+verificarTokenReset();
+// Atualiza badge a cada 30s enquanto logado
+setInterval(() => { if (getToken()) atualizarBadge(); }, 30000);

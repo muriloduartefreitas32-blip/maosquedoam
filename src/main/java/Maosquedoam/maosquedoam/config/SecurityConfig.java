@@ -45,6 +45,7 @@ public class SecurityConfig {
                                 "/usuarios/recuperar-senha", "/usuarios/redefinir-senha",
                                 "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/itens", "/itens/**").permitAll()
+                        .requestMatchers("/ws/**").permitAll()  // <-- adicionar
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

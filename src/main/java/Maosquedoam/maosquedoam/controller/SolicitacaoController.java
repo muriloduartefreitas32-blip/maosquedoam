@@ -19,7 +19,7 @@ public class SolicitacaoController {
     @Autowired
     private SolicitacaoService solicitacaoService;
 
-    @PostMapping
+    @PostMapping("/solicitar")
     public ResponseEntity<Solicitacao> solicitar(@RequestBody @Valid SolicitacaoDto dto,
     Authentication authentication){
        String email = authentication.getName();
