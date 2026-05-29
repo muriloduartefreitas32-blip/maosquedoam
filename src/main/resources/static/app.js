@@ -8,6 +8,19 @@ const setUsuario = (u) => localStorage.setItem('usuario', JSON.stringify(u));
 const removeUsuario = () => localStorage.removeItem('usuario');
 const headers = () => ({ 'Content-Type': 'application/json', ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) });
 
+function navegarTela(tela) {
+  document.querySelectorAll('.page-view').forEach(view => {
+    view.classList.toggle('active', view.dataset.page === tela);
+  });
+
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.view === tela);
+  });
+
+  if (tela === 'itens') carregarItens();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 /* ─── TOAST ─── */
 function toast(msg, tipo = 'ok') {
   const el = document.getElementById('toast');
@@ -412,10 +425,15 @@ document.getElementById('donation-form').addEventListener('submit', async (e) =>
   e.currentTarget.reset();
   toast('Item cadastrado com sucesso!');
   carregarItens();
+  navegarTela('itens');
 });
 
 /* ─── EVENT LISTENERS ─── */
 document.getElementById('btn-login').addEventListener('click', abrirLogin);
+
+document.querySelectorAll('[data-view]').forEach(el => {
+  el.addEventListener('click', () => navegarTela(el.dataset.view));
+});
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {

@@ -3,164 +3,233 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mãos que Doam</title>
+  <title>Maos que Doam</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body>
+  <header class="topbar">
+    <button class="brand" type="button" data-view="inicio">
+      <span class="brand-mark">MD</span>
+      <span>
+        <strong>Maos que Doam</strong>
+        <small>rede solidaria</small>
+      </span>
+    </button>
 
-  <header class="nav">
-    <div class="logo">Mãos que Doam</div>
-    <nav class="nav-links">
-      <a href="#itens">Itens</a>
-      <a href="#como-funciona">Como funciona</a>
-      <a href="#doar">Doar</a>
+    <nav class="main-nav" aria-label="Navegacao principal">
+      <button class="nav-tab active" type="button" data-view="inicio">Inicio</button>
+      <button class="nav-tab" type="button" data-view="itens">Itens</button>
+      <button class="nav-tab" type="button" data-view="doar">Doar</button>
+      <button class="nav-tab" type="button" data-view="impacto">Impacto</button>
     </nav>
-    <div class="nav-right">
 
-      <!-- Deslogado: só "Entrar" -->
+    <div class="nav-right">
       <button class="nav-cta" id="btn-login">Entrar</button>
 
-      <!-- Logado: avatar + nome + mensagens + sair -->
-      <div id="nav-perfil" style="display:none;align-items:center;gap:0.75rem">
+      <div id="nav-perfil" class="nav-profile" style="display:none">
         <div class="nav-avatar"></div>
         <span class="nav-nome"></span>
-        <button class="nav-msg-btn" id="btn-mensagens" onclick="abrirConversas()">
-          💬 <span class="msg-badge" id="msg-badge" style="display:none">0</span>
+        <button class="nav-msg-btn" id="btn-mensagens" onclick="abrirConversas()" aria-label="Abrir mensagens">
+          <span>Mensagens</span>
+          <span class="msg-badge" id="msg-badge" style="display:none">0</span>
         </button>
         <button class="nav-cta nav-cta-danger" onclick="logout()">Sair</button>
       </div>
-
     </div>
   </header>
 
-  <section class="hero">
-    <div class="hero-left">
-      <div class="tag">
-        <div class="dot"></div>
-        Plataforma ativa em Salvador, BA
-      </div>
-      <h1>Doe com <em>propósito.</em><br>Receba com dignidade.</h1>
-      <p class="hero-sub">Conectamos quem tem com quem precisa — de forma organizada, transparente e humana.</p>
-      <div class="cta-row">
-        <a href="#doar" class="btn-main">Quero doar</a>
-        <a href="#itens" class="btn-ghost">Ver itens disponíveis <span class="arrow">→</span></a>
-      </div>
-    </div>
-    <div class="hero-right">
-      <div class="stat-card highlight">
-        <div class="stat-num green" data-count="1280">0</div>
-        <div class="stat-label">itens arrecadados este mês</div>
-      </div>
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-num" data-count="420">0</div>
-          <div class="stat-label">famílias apoiadas</div>
+  <main class="app-shell">
+    <section class="page-view active" id="view-inicio" data-page="inicio">
+      <div class="hero-panel">
+        <div class="hero-copy">
+          <div class="eyebrow">Salvador, BA</div>
+          <h1>Doacoes organizadas para chegar em quem precisa.</h1>
+          <p>Cadastre itens, acompanhe solicitacoes, converse com pessoas interessadas e mantenha cada entrega em um fluxo simples.</p>
+          <div class="hero-actions">
+            <button class="btn-main" type="button" data-view="doar">Cadastrar doacao</button>
+            <button class="btn-secondary" type="button" data-view="itens">Ver itens disponiveis</button>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" data-count="36">0</div>
-          <div class="stat-label">campanhas ativas</div>
+        <div class="hero-media" aria-label="Pessoa entregando uma caixa de doacoes"></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <article class="metric-tile">
+          <span class="metric-label">Itens acompanhados</span>
+          <strong data-count="1280">0</strong>
+          <small>cadastros e movimentacoes solidarias</small>
+        </article>
+        <article class="metric-tile">
+          <span class="metric-label">Familias apoiadas</span>
+          <strong data-count="420">0</strong>
+          <small>beneficiarios conectados a doadores</small>
+        </article>
+        <article class="metric-tile">
+          <span class="metric-label">Conversas ativas</span>
+          <strong data-count="36">0</strong>
+          <small>combinando retirada e entrega</small>
+        </article>
+      </div>
+
+      <div class="home-panels">
+        <section class="work-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Fluxo rapido</span>
+            <h2>O que voce pode fazer agora</h2>
+          </div>
+          <div class="action-list">
+            <button type="button" class="action-row" data-view="itens">
+              <span>01</span>
+              <strong>Encontrar itens</strong>
+              <small>Veja roupas, alimentos, moveis e outros itens disponiveis.</small>
+            </button>
+            <button type="button" class="action-row" data-view="doar">
+              <span>02</span>
+              <strong>Cadastrar uma doacao</strong>
+              <small>Publique item, quantidade, estado de conservacao e localizacao.</small>
+            </button>
+            <button type="button" class="action-row" onclick="abrirConversas()">
+              <span>03</span>
+              <strong>Abrir mensagens</strong>
+              <small>Acompanhe combinados depois que uma solicitacao for criada.</small>
+            </button>
+          </div>
+        </section>
+
+        <aside class="notice-panel">
+          <span class="eyebrow">Boas praticas</span>
+          <h2>Combine tudo pelo chat antes da entrega.</h2>
+          <p>Confirme disponibilidade, ponto de encontro, horario e estado do item. A conversa fica vinculada a solicitacao.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="page-view" id="view-itens" data-page="itens">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">Catalogo</span>
+          <h1>Itens disponiveis agora</h1>
+        </div>
+        <button class="btn-main compact" type="button" data-view="doar">Cadastrar item</button>
+      </div>
+
+      <div class="toolbar">
+        <div class="section-filters">
+          <button class="filter-btn active" data-cat="">Todos</button>
+          <button class="filter-btn" data-cat="roupas">Roupas</button>
+          <button class="filter-btn" data-cat="alimentos">Alimentos</button>
+          <button class="filter-btn" data-cat="moveis">Moveis</button>
+          <button class="filter-btn" data-cat="eletronicos">Eletronicos</button>
+        </div>
+        <div class="search-row">
+          <input type="text" id="busca-input" class="search-input" placeholder="Buscar por nome, categoria ou local">
+          <button class="btn-search" id="btn-busca">Buscar</button>
         </div>
       </div>
-    </div>
-  </section>
 
-  <section class="items-section" id="itens">
-    <div class="section-header">
-      <div class="section-title">Itens disponíveis agora</div>
-      <div class="section-filters">
-        <button class="filter-btn active" data-cat="">Todos</button>
-        <button class="filter-btn" data-cat="roupas">Roupas</button>
-        <button class="filter-btn" data-cat="alimentos">Alimentos</button>
-        <button class="filter-btn" data-cat="móveis">Móveis</button>
-        <button class="filter-btn" data-cat="eletrônicos">Eletrônicos</button>
+      <div class="items-grid" id="items-grid">
+        <div class="loading-msg">Carregando itens...</div>
       </div>
-    </div>
-    <div class="search-row">
-      <input type="text" id="busca-input" class="search-input" placeholder="Buscar itens...">
-      <button class="btn-search" id="btn-busca">Buscar</button>
-    </div>
-    <div class="items-grid" id="items-grid">
-      <div class="loading-msg">Carregando itens...</div>
-    </div>
-  </section>
+    </section>
 
-  <section class="flow-section" id="como-funciona">
-    <div class="flow-copy">
-      <div class="flow-label">Como funciona</div>
-      <h2 class="flow-title">Simples para quem doa.<br>Digno para quem recebe.</h2>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">01 —</div>
-        <div class="step-text">Cadastre o item que deseja doar com descrição e localização.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">02 —</div>
-        <div class="step-text">Beneficiário solicita e vocês combinam a entrega diretamente.</div>
-      </div>
-      <div class="step">
-        <div class="step-num">03 —</div>
-        <div class="step-text">Confirme a entrega, avalie a experiência e gere impacto real.</div>
-      </div>
-    </div>
-  </section>
+    <section class="page-view" id="view-doar" data-page="doar">
+      <div class="donation-layout">
+        <aside class="donation-aside">
+          <span class="eyebrow">Nova doacao</span>
+          <h1>Cadastre um item com clareza.</h1>
+          <p>Quanto mais completo o cadastro, mais facil fica para uma pessoa entender se aquele item atende a necessidade dela.</p>
+          <div class="aside-checks">
+            <span>Informe estado e quantidade</span>
+            <span>Use uma localizacao objetiva</span>
+            <span>Responda solicitacoes pelo chat</span>
+          </div>
+        </aside>
 
-  <section class="donation-section" id="doar">
-    <div class="donation-inner">
-      <div class="donation-copy">
-        <div class="flow-label">Comece agora</div>
-        <h2 class="flow-title" style="color:#f0ede6">Registre um item<br>para doação</h2>
-        <p style="color:rgba(255,255,255,0.45);font-size:0.9rem;line-height:1.7;margin-top:1rem">Faça login para cadastrar itens e acompanhar suas doações em tempo real.</p>
-      </div>
-      <form class="donation-form" id="donation-form">
-        <div class="form-row">
+        <form class="donation-form" id="donation-form">
+          <div class="form-row">
+            <label>
+              <span>Titulo do item *</span>
+              <input type="text" id="item-titulo" placeholder="Ex: Camisas em bom estado">
+            </label>
+            <label>
+              <span>Categoria</span>
+              <select id="item-categoria">
+                <option value="roupas">Roupas</option>
+                <option value="alimentos">Alimentos</option>
+                <option value="moveis">Moveis</option>
+                <option value="eletronicos">Eletronicos</option>
+                <option value="brinquedos">Brinquedos</option>
+                <option value="outros">Outros</option>
+              </select>
+            </label>
+          </div>
           <label>
-            <span>Título do item *</span>
-            <input type="text" id="item-titulo" placeholder="Ex: Camisas em bom estado">
+            <span>Descricao *</span>
+            <textarea id="item-descricao" placeholder="Descreva estado, tamanho, validade ou detalhes importantes"></textarea>
           </label>
+          <div class="form-row">
+            <label>
+              <span>Estado de conservacao *</span>
+              <input type="text" id="item-estado" placeholder="Ex: usado, bom estado">
+            </label>
+            <label>
+              <span>Quantidade</span>
+              <input type="number" id="item-quantidade" placeholder="1" min="1">
+            </label>
+          </div>
           <label>
-            <span>Categoria</span>
-            <select id="item-categoria">
-              <option value="roupas">Roupas</option>
-              <option value="alimentos">Alimentos</option>
-              <option value="móveis">Móveis</option>
-              <option value="eletrônicos">Eletrônicos</option>
-              <option value="brinquedos">Brinquedos</option>
-              <option value="outros">Outros</option>
-            </select>
+            <span>Localizacao</span>
+            <input type="text" id="item-localizacao" placeholder="Ex: Salvador, BA">
           </label>
+          <button type="submit" class="btn-submit">Cadastrar item</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="page-view" id="view-impacto" data-page="impacto">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">Como funciona</span>
+          <h1>Uma jornada simples do cadastro ate a entrega.</h1>
         </div>
-        <label>
-          <span>Descrição *</span>
-          <textarea id="item-descricao" placeholder="Descreva o estado e detalhes do item..."></textarea>
-        </label>
-        <div class="form-row">
-          <label>
-            <span>Estado de conservação *</span>
-            <input type="text" id="item-estado" placeholder="Ex: Usado, bom estado">
-          </label>
-          <label>
-            <span>Quantidade</span>
-            <input type="number" id="item-quantidade" placeholder="1" min="1">
-          </label>
-        </div>
-        <label>
-          <span>Localização</span>
-          <input type="text" id="item-localizacao" placeholder="Ex: Salvador, BA">
-        </label>
-        <button type="submit" class="btn-submit">Cadastrar item</button>
-      </form>
-    </div>
-  </section>
+      </div>
 
-  <footer class="footer-bar">
-    <div class="footer-logo">Mãos que Doam</div>
-    <div class="footer-copy">Solidariedade com organização — Salvador, BA © 2026</div>
-  </footer>
+      <div class="process-grid">
+        <article class="process-card">
+          <span>01</span>
+          <h2>Publique</h2>
+          <p>O doador cadastra o item com categoria, descricao, quantidade e localizacao.</p>
+        </article>
+        <article class="process-card">
+          <span>02</span>
+          <h2>Solicite</h2>
+          <p>O beneficiario encontra o item, envia uma mensagem inicial e abre uma solicitacao.</p>
+        </article>
+        <article class="process-card">
+          <span>03</span>
+          <h2>Converse</h2>
+          <p>As duas pessoas combinam detalhes no chat vinculado aquela solicitacao.</p>
+        </article>
+        <article class="process-card">
+          <span>04</span>
+          <h2>Entregue</h2>
+          <p>Depois da combinacao, a entrega acontece com mais seguranca e organizacao.</p>
+        </article>
+      </div>
+
+      <div class="impact-strip">
+        <div>
+          <span class="eyebrow">Compromisso</span>
+          <h2>Fidelidade ao projeto: doacao, solicitacao e conversa em um so lugar.</h2>
+        </div>
+        <button class="btn-secondary" type="button" data-view="itens">Explorar itens</button>
+      </div>
+    </section>
+  </main>
 
   <div id="toast" class="toast"></div>
 
